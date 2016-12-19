@@ -6,7 +6,11 @@
     android:orientation="vertical">
 
     <!-- 头部 -->
-    <include layout="@layout/header" />
+    <!--<include layout="@layout/header" />-->
+    <com.example.administrator.mybasewithtitle.component.ActivityHeaderView
+        android:id="@+id/activityHeaderView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <RelativeLayout
         android:layout_width="match_parent"

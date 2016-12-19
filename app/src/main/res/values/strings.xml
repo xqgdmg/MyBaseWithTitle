@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MyQQDemo</string>
+    <string name="app_name">MyDemo</string>
     <string name="logout_text">退(%)出</string>
     <string name="chat_send_text">发送</string>
     <string name="fragment1">Tab1</string>

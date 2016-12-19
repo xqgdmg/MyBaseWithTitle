@@ -1,13 +1,12 @@
 package com.example.administrator.mybasewithtitle.base;
 
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.Image;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,24 +20,28 @@ import android.widget.TextView;
 import com.example.administrator.mybasewithtitle.MyApplication;
 import com.example.administrator.mybasewithtitle.R;
 
+import com.example.administrator.mybasewithtitle.component.ActivityHeaderView;
+import com.example.administrator.mybasewithtitle.utils.AlertUtil;
 import com.example.administrator.mybasewithtitle.utils.LogUtil;
 import com.example.administrator.mybasewithtitle.utils.ToastUtil;
 
 import butterknife.ButterKnife;
+import retrofit2.Retrofit;
 
 /**
  * 作者：Chris
  * 创建时间: 2016/12/18 21:42
  * 邮箱：395932265@qq.com
  * 描述:
- *      处理了返回按键，可以关闭的 Log ，
+ *      regCommonBtn 处理了返回按键
+ *       processClick 方法，处理除了back按钮外的点击事件
  *      保存 Activity 到 Application ，
- *      跳转到另一个 Activity
- *      处理公共的头部的 back 按钮点击事件，
- *      此Activity 没有布局 xml 文件,<include layout="@layout/header"/>,方式添加头部，可以减少代码
- *      创建一个progressdialog
+ *      跳转到另一个 Activity ，可以关闭的 Log
+ *      此Activity 有布局 xml 文件
+ *      创建一个 progressdialog
  *      UI 线程中弹出 toast
- *      processClick 方法，处理除了back按钮外的点击事件
+ *      提供头部的设置方法
+ *      提供没有数据的视图
  *
  *      abstract 类不需要在清单文件注册
  */
@@ -51,28 +54,22 @@ public abstract class BaseActivity  extends AppCompatActivity implements View.On
     private RelativeLayout rlNoDataLayout;
     private TextView tvNoData;
     private RelativeLayout rlLoading;
-    private InputMethodManager imm;
+    private InputMethodManager inputMethodManager;
+    private ActivityHeaderView activityHeader;
+    private int loadingCount;// 计算加载了多少次
 
+    /**
+     * onCreate 没有任何操作
+     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-//        setContentView(getLayoutId());
-
-//        // ButterKnife绑定,子类不需要再次绑定
-//        ButterKnife.bind(this);
-
-//        //添加到 Application
-//        ((MyApplication)getApplication()).insertActivity(this);
-
-//        initView();
-//        initListener();
-//        initData();
-//        regCommonBtn();
     }
 
     /**
+     * setContentView
      * 处理布局
+     * 后续的操作都在这里实现
      */
     @Override
     public void setContentView(int layoutResID) {
@@ -91,43 +88,140 @@ public abstract class BaseActivity  extends AppCompatActivity implements View.On
         //添加到 Application
         ((MyApplication)getApplication()).insertActivity(this);
 
+        // 这些方法是否还有必要？
         initView();
         initListener();
         initData();
         regCommonBtn();
     }
 
-//    /**
-//     * 重载方法，处理布局
-//     */
-//    @Override
-//    public void setContentView(View view) {
-//        super.setContentView(R.layout.activity_base);
-//        findView();
-//        flContentLayout.addView(view);
-//    }
+    /**
+     * 重载方法，处理布局
+     * 后续的操作也可以都在这里实现
+     */
+    @Override
+    public void setContentView(View view) {
+        super.setContentView(R.layout.activity_base);
+        findView();
+        flContentLayout.addView(view);
+    }
 
     /**
      * 找自己的控件
      */
     private void findView() {
-        ivBack = (ImageView) findViewById(R.id.back);
-        ivAdd = (ImageView) findViewById(R.id.add);
-        tvTitle = (TextView) findViewById(R.id.title);
+        // 头部只要找到这个就行，面向对象的思想
+        activityHeader = (ActivityHeaderView) findViewById(R.id.activityHeaderView);
+
         flContentLayout = (FrameLayout) findViewById(R.id.flContentLayout);// 容器
         rlNoDataLayout = (RelativeLayout) findViewById(R.id.rlNoDataLayout);
         tvNoData = (TextView) findViewById(R.id.tvNoData);
         rlLoading = (RelativeLayout) findViewById(R.id.rlLoading);
 
-        /*activityHeader.setLeftIcon(R.drawable.ic_back, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });*/
-
-        imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        // 管理输入法
+        inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
     }
+
+    /**
+     * 是否显示标题栏
+     */
+    public void isShowHeader(boolean isShowHeader) {
+        activityHeader.isShowHeader(isShowHeader);
+    }
+
+    /**
+     * 设置标题的文字
+     */
+    public void setTitle(String string) {
+        activityHeader.setTitle(string);
+    }
+
+    /**
+     * s设置右边的文字
+     */
+    public void setRightText(String str, View.OnClickListener listener) {
+        activityHeader.setRightText(str, listener);
+    }
+
+    /**
+     * 设置右边的图片
+     */
+    public void setRightIcon(int resId, View.OnClickListener listener) {
+        activityHeader.setRightIcon(resId, listener);
+    }
+
+    /**
+     * 隐藏右边的文字
+     */
+    public void hideRightText() {
+        activityHeader.hideRightText();
+    }
+
+    /**
+     * 显示没有数据的文字提示，没有参数
+     */
+    public void showNoDataTxt() {
+        if (rlNoDataLayout != null) {
+            rlNoDataLayout.setVisibility(View.VISIBLE);
+            showNoDataTxt(null);
+        }
+    }
+
+    /**
+     * 显示没有数据的文字提示，带参数
+     */
+    public void showNoDataTxt(String noTxt) {
+        if (rlNoDataLayout != null && tvNoData != null) {
+            rlNoDataLayout.setVisibility(View.VISIBLE);
+            if (TextUtils.isEmpty(noTxt)) {
+                tvNoData.setText("目前没有数据");
+            } else {
+                tvNoData.setText(noTxt);
+            }
+        }
+    }
+
+    /**
+     * 隐藏没有数据的文字提示
+     */
+    public void hideNoDataTxt() {
+        if (rlNoDataLayout != null) {
+            rlNoDataLayout.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * 显示加载中布局 RelativeLayout
+     * 并计算加载了多少次
+     */
+    public void showLoading() {
+        if (rlLoading == null) {
+            return;
+        }
+        loadingCount++;
+        rlLoading.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * 隐藏加载中布局 RelativeLayout
+     * 并计算加载了多少次
+     */
+    public void hideLoading() {
+        if (rlLoading == null) {
+            return;
+        }
+        loadingCount--;
+        if (loadingCount <= 0) {// 隐藏比显示还多
+            loadingCount = 0;
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    rlLoading.setVisibility(View.GONE);// gone 掉
+                }
+            }, 500);
+        }
+    }
+
 
     /**
      * 处理公用按钮,返回键
@@ -184,22 +278,7 @@ public abstract class BaseActivity  extends AppCompatActivity implements View.On
         return dialog;
     }
 
-   /* *//**
-     * 显示删除联系人对话框
-     *//*
-    private void showDialog(String title,String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(title);
-        builder.setMessage(message);
-        builder.setNegativeButton("取消", null);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //执行删除联系人 外部可以点击
-//                deleContact(position);
-            }
-        }).show();
-    }*/
+
 
     /**
      * UI 线程中弹出 toast
@@ -242,46 +321,86 @@ public abstract class BaseActivity  extends AppCompatActivity implements View.On
     }
 
     /**
-     * 处理事件的分发
+     * 处理事件的分发，只要是为了隐藏键盘
      */
     @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev.getAction() == MotionEvent.ACTION_DOWN
-                || ev.getAction() == MotionEvent.ACTION_MOVE
-                || ev.getAction() == MotionEvent.ACTION_POINTER_DOWN) {
-            View v = getCurrentFocus();
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN
+                || event.getAction() == MotionEvent.ACTION_MOVE
+                || event.getAction() == MotionEvent.ACTION_POINTER_DOWN) {
 
-            if (isShouldHideInput(v, ev) && imm != null) {
-                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+            View view = getCurrentFocus();// 获取当前获取到焦点的控件
+
+            // 判断是否该 隐藏键盘
+            if (isHideInput(view, event) && inputMethodManager != null) {
+                inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
-            return super.dispatchTouchEvent(ev);
+
+            return super.dispatchTouchEvent(event);
         }
         // 必不可少，否则所有的组件都不会有TouchEvent了
-        return getWindow().superDispatchTouchEvent(ev) || onTouchEvent(ev);
+        return getWindow().superDispatchTouchEvent(event) || onTouchEvent(event);
     }
 
     /**
-     * 通过点击区域，判断是否隐藏EditText
+     * 通过点击区域，判断是否隐藏输入键盘
      */
-    public boolean isShouldHideInput(View v, MotionEvent event) {
-        if (v != null && (v instanceof EditText)) {
+    public boolean isHideInput(View view, MotionEvent event) {
+        if (view != null && (view instanceof EditText)) {// EditText
             int[] leftTop = {0, 0};
-            // 获取输入框当前的location位置
-            v.getLocationInWindow(leftTop);
+            // 获取输入框当前的location位置，上左下右
+            view.getLocationInWindow(leftTop);
             int left = leftTop[0];
             int top = leftTop[1];
-            int bottom = top + v.getHeight();
-            int right = left + v.getWidth();
-            if (event.getX() > left && event.getX() < right
-                    && event.getY() > top && event.getY() < bottom) {
-                // 点击的是输入框区域，保留点击EditText的事件
+            int bottom = top + view.getHeight();
+            int right = left + view.getWidth();
+
+            if (event.getX() > left && event.getX() < right // 表示没有超过 et 的左右边界
+                    && event.getY() > top && event.getY() < bottom) { // 表示没有超过 et 的上下边界
+                // 点击的是输入框区域，保留点击EditText的事件，显示键盘
                 return false;
             } else {
-                return true;
+                return true;// 隐藏键盘
             }
         }
         return false;
     }
+
+    /**
+     * 请求网络用到
+     *
+     * @param error
+     */
+
+//    public void showError(RetrofitError error) {
+//        if (error.isNetworkError()) {
+//            AlertUtil.show(this, "请求数据失败，请重试");
+//            return;
+//        }
+//        AlertUtil.show(this, error + "");
+//    }
+//
+//    public boolean hasError(RequestResult result) {
+//        if (result != null) {
+//            String message = result.message.descript;
+//            if (!result.succeeded) {
+//                AlertUtil.show(this, message);//错误用AlertDialog
+//            }
+//            return !result.succeeded;
+//        }
+//        return true;
+//    }
+//
+//    public boolean hasError(RequestListResult result) {
+//        if (result != null) {
+//            String message = result.message.descript;
+//            if (!result.succeeded) {
+//                AlertUtil.show(this, message);
+//            }
+//            return !result.succeeded;
+//        }
+//        return true;
+//    }
 
 
     /**

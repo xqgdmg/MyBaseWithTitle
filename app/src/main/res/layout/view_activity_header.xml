@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:background="@color/colorPrimary"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <!-- 左边返回图片-->
+    <ImageView
+        android:id="@+id/ivHeaderLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:scaleType="center"
+        android:src="@drawable/back_selector" />
+
+    <!-- 左边文字-->
+    <TextView
+        android:id="@+id/tvHeaderLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:drawablePadding="5dp"
+        android:gravity="center"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:singleLine="true"
+        android:text="左边文字"
+        android:textColor="@color/white"
+        android:visibility="gone" />
+
+    <TextView
+        android:text="@string/app_name"
+        android:id="@+id/tvHeaderTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:gravity="center"
+        android:lines="1"
+        android:singleLine="true"
+        android:textColor="@color/white"
+        android:textSize="18sp" />
+
+    <!-- 右边文字 -->
+    <TextView
+        android:id="@+id/tvHeaderRight"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="5dp"
+        android:gravity="center"
+        android:paddingBottom="4dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="4dp"
+        android:text="右边文字"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
+    <!-- 右边图标 -->
+    <ImageView
+        android:id="@+id/ivRight"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:visibility="gone" />
+
+</RelativeLayout>

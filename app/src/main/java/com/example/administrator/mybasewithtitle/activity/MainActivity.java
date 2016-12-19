@@ -61,6 +61,9 @@ public class MainActivity extends BaseActivity {
         tab3.setOnClickListener(this);
     }
 
+    /**
+     * 本来是 findViewById 因为使用了 ButterKnife 所以没有什么意义了
+     */
     @Override
     protected void initView() {
 
@@ -119,7 +122,9 @@ public class MainActivity extends BaseActivity {
     }
 
 
-    //初始化要显示的fragment
+    /**
+     * 初始化所有要显示的fragment
+     */
     private void initFragment() {
         fragments.clear();// 清空集合
 
@@ -145,6 +150,19 @@ public class MainActivity extends BaseActivity {
             //第一个fragment没有添加 添加并显示，第一个按钮被选中
             getSupportFragmentManager().beginTransaction().add(R.id.main_container, fragments.get(0), "0").commit();
             tab1.setSelected(true);
+        }
+    }
+
+
+    /**
+     * 更新 任意 Fragment 界面数据
+     */
+    private void updateFragment1() {
+        //判断联系人界面有没有添加
+        Fragment1 fragment1 = (Fragment1) fragments.get(1);
+        if (fragment1.isAdded()) {
+            //调用 Fragment1 中的方法，可以对 Fragment1 进行操作
+//            fragment1.loadContactsFromServer();
         }
     }
 

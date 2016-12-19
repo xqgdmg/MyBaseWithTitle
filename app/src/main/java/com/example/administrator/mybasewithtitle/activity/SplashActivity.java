@@ -51,7 +51,7 @@ public class SplashActivity extends BaseActivity {
                 public void run() {
                     startNewActivity(MainActivity.class, true);
                 }
-            }, 2000);
+            }, 4000);
         } else {
             //没有登录 进入登录界面
             handler.postDelayed(new Runnable() {
@@ -59,15 +59,21 @@ public class SplashActivity extends BaseActivity {
                 public void run() {
                     startNewActivity(MainActivity.class, true);
                 }
-            }, 2000);
+            }, 4000);
         }
     }
 
-    //判断当前是否登录  true为已经登录
+    /**
+     * 判断当前是否登录  true为已经登录 ,此 Demo 永远返回true
+     */
     private boolean isLogingBefore() {
             return true;
     }
 
+    /**
+     * onDestroy
+     * handler 移除所有回调和消息
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
